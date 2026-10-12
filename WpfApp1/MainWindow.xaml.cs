@@ -1,4 +1,6 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
+using System.IO;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,6 +23,7 @@ namespace WpfApp1
         Dictionary<string, int> orders = new Dictionary<string, int>();
         string resultMessage = "";
         string typeMessage = "內用";
+
         public MainWindow()
         {
             InitializeComponent();
@@ -115,13 +118,15 @@ namespace WpfApp1
                 foreach (var line in lines)
                 {
                     string[] tokens = line.Split(',');
-                    string drinkName = tokens[0];
-                    int price = int.Parse(tokens[1]);
-                    drinks.Add(drinkName, price);
+                    if (tokens.Length >= 2)
+                    {
+                        string drinkName = tokens[0].Trim();
+                        int price = int.Parse(tokens[1].Trim());
+                        drinks[drinkName] = price;
+                    }
                 }
             }
         }
-
 
         private void OrderButton_Click(object sender, RoutedEventArgs e)
         {
@@ -148,7 +153,6 @@ namespace WpfApp1
                 }
             }
 
-
             // 檢視orders，把所有訂單細項內容計算出細項總和
             resultMessage += $"訂購方式：{typeMessage}，訂購清單如下：\n";
             foreach (var item in orders)
@@ -157,6 +161,7 @@ namespace WpfApp1
                 int price = drinks[drinkName];
                 int quantity = item.Value;
 
+                // 修正：補上乘號 *
                 int subTotal = price * quantity;
                 total += subTotal;
                 resultMessage += $"{index}. {drinkName}：{price}元 X {quantity}杯 = {subTotal}元\n";
@@ -166,22 +171,26 @@ namespace WpfApp1
             if (total >= 500)
             {
                 discountMessage = "打8折";
+                // 修正：補上乘號 *
                 sellPrice = total * 0.8;
             }
             else if (total >= 300)
             {
                 discountMessage = "打85折";
+                // 修正：補上乘號 *
                 sellPrice = total * 0.85;
             }
             else if (total >= 200)
             {
                 discountMessage = "打9折";
+                // 修正：補上乘號 *
                 sellPrice = total * 0.9;
             }
             else
             {
                 sellPrice = total;
             }
+
             resultMessage += $"總價{total}元，{discountMessage}，售價為：{sellPrice}元\n";
             ResultTextBlock.Text = resultMessage;
 
@@ -199,7 +208,10 @@ namespace WpfApp1
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
             var rb = sender as RadioButton;
-            typeMessage = rb.Content.ToString();
+            if (rb != null)
+            {
+                typeMessage = rb.Content.ToString();
+            }
         }
     }
 }
